@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  glossary-grpc:
+    build: .
+    container_name: glossary-grpc
+    ports:
+      - "50051:50051"
+    volumes:
+      - ./app:/app/app                 # Монтируем папку с серверным кодом
+      - ./server:/app/server           # Папка с сервером
+      - ./proto:/app/proto:ro          # Папка с proto-файлами (read-only)
+    networks:
+      - glossary-network
+    restart: always
+
+  glossary-client:
+    build: .
+    container_name: glossary-client
+    depends_on:
+      - glossary-grpc
+    volumes:
+      - ./server:/app/server           # Клиент использует серверный код
+      - ./proto:/app/proto:ro          # Папка с proto-файлами (read-only)
+    environment:
+      GRPC_PORT: 50051
+    networks:
+      - glossary-network
+    restart: always
+
+networks:
+  glossary-network:
+    driver: bridge
